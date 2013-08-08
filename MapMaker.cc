@@ -134,14 +134,27 @@ bool MapMaker::ResetDone()
 // they should be flagged as bad, based on tracker feedback.
 void MapMaker::HandleBadPoints()
 {
+
   // Did the tracker see this point as an outlier more often than as an inlier?
   for(unsigned int i=0; i<mMap.vpPoints.size(); i++)
     {
       MapPoint &p = *mMap.vpPoints[i];
       if(p.nMEstimatorOutlierCount > 20 && p.nMEstimatorOutlierCount > p.nMEstimatorInlierCount)
 	p.bBad = true;
+  
+      //BEGIN ADDED_CODE
+      KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
+      KeyFrame &kOrig = *(p.pPatchSourceKF);
+      double D = KeyFrameLinearDist(kNew, kOrig);
+      //cout << D << endl;
+      if (D > 0.5)
+	p.bBad = true;
+      //END ADDED_CODE
     }
   
+  
+  
+
   // All points marked as bad will be erased - erase all records of them
   // from keyframes in which they might have been measured.
   for(unsigned int i=0; i<mMap.vpPoints.size(); i++)
