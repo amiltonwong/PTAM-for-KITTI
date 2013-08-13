@@ -65,8 +65,12 @@ void Tracker::Reset()
   mnFrame=0;
   mv6CameraVelocity = Zeros;
   mbJustRecoveredSoUseCoarse = false;
+
+  //ADDED_CODE
   mbNextFrame = false;
-  
+  mnInitialFrameCount = 0;
+  //mTimer = 0;
+
   // Tell the MapMaker to reset itself.. 
   // this may take some time, since the mapmaker thread may have to wait
   // for an abort-check during calculation, so sleep while waiting.
@@ -182,10 +186,10 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
  	{
  	  if(mbUseSBIInit)
  	    CalcSBIRotation();
- 	  ApplyMotionModel();       //
+ 	  	  
+	  ApplyMotionModel();       //
  	  TrackMap();               //  These three lines do the main tracking work.
- 	  UpdateMotionModel();      //
-
+ 	  UpdateMotionModel();      // 
  	  AssessTrackingQuality();  //  Check if we're lost or if tracking is poor.
 
  	  { // Provide some feedback for the user:
@@ -222,8 +226,11 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
     if(mbDraw)
   	  RenderGrid();
 
-    if(mbUserPressedSpacebar)  // First spacebar = this is the first keyframe
+    //    float t = ((clock() - mTimer))/CLOCKS_PER_SEC;
+    //    time_t t = clock() - mTimer;
+    if(mbUserPressedSpacebar )  // First spacebar = this is the first keyframe
   	{
+	  //  mTimer = clock();
   	  mbUserPressedSpacebar = false;
   	  mbNextFrame = true;
   	}
@@ -370,6 +377,7 @@ void Tracker::TrackForInitialMap()
   /* original PTAM code
   if(mnInitialStage == TRAIL_TRACKING_NOT_STARTED) 
     {
+
       if(mbUserPressedSpacebar)  // First spacebar = this is the first keyframe
 	{
 	  mbUserPressedSpacebar = false;
@@ -422,31 +430,49 @@ void Tracker::TrackForInitialMap()
     }
    */
   
+  //ADDED_CODE
   if(mnInitialStage == TRAIL_TRACKING_STARTED)
-    {
+  {
       int nGoodTrails = TrailTracking_Advance();  // This call actually tracks the trails
       if(nGoodTrails < 10) // if most trails have been wiped out, no point continuing.
-	{
-      cout << "Trail tracking failed!" << endl;
-	  Reset();
-	  return;
-	}
-      
-      // If the user pressed spacebar here, use trails to run stereo and make the intial map..
+      {
+	cout << "Trail tracking failed!" << endl;
+	Reset();
+	return;
+      }
+
+
       if(mbUserPressedSpacebar)
+      {
+	mnInitialFrameCount++;
+	cout << mnInitialFrameCount << endl;
+      }
+     
+      // If the user pressed spacebar here, use trails to run stereo and make the intial map..
+      if(mnInitialFrameCount > 0 && mbUserPressedSpacebar)
 	{
-	  mbUserPressedSpacebar = false;
-	  mbNextFrame = true;
+	  cout << "start matching" << endl;
 	  vector<pair<ImageRef, ImageRef> > vMatches;   // This is the format the mapmaker wants for the stereo pairs
 	  for(list<Trail>::iterator i = mlTrails.begin(); i!=mlTrails.end(); i++)
 	    vMatches.push_back(pair<ImageRef, ImageRef>(i->irInitialPos,
 							i->irCurrentPos));
 	  mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
 	  mnInitialStage = TRAIL_TRACKING_COMPLETE;
+	  
 	}
       else
 	mMessageForUser << "press space bar again to perform stereo init." << endl;
-    }
+
+      if (mbUserPressedSpacebar)
+      {
+	mbUserPressedSpacebar = false;
+	mbNextFrame = true;
+	  
+      }
+  }
+  //END ADDED_CODE
+
+
 }
 
 // The current frame is to be the first keyframe!
@@ -469,6 +495,11 @@ void Tracker::TrailTracking_Start()
       if(!mCurrentKF.aLevels[0].im.in_image_with_border(vCornersAndSTScores[i].second, MiniPatch::mnHalfPatchSize))
 	continue;
       Trail t;
+
+      //ADDED_CODE
+      //      if(vCornersAndSTScores[i].second.y < (mirSize.y/2))
+      //continue;
+
       t.mPatch.SampleFromImage(vCornersAndSTScores[i].second, mCurrentKF.aLevels[0].im);
       t.irInitialPos = vCornersAndSTScores[i].second;
       t.irCurrentPos = t.irInitialPos;
@@ -1075,13 +1106,16 @@ void Tracker::AssessTrackingQuality()
       else
 	dLargeFracFound = dTotalFracFound;
 
-      cout << dTotalFracFound << endl;
-
+      //ADDED_CODE
+      //cout << dTotalFracFound << endl;
+      //cout << dLargeFracFound << endl;
       //static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       //static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.13, SILENT);
       static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.02, SILENT);
-      
+ 
+
+
       if(dTotalFracFound > *gvdQualityGood)
 	mTrackingQuality = GOOD;
       else if(dLargeFracFound < *gvdQualityLost)

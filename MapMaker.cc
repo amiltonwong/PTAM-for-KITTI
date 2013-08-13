@@ -60,7 +60,7 @@ void MapMaker::Reset()
 
 void MapMaker::run()
 {
-
+  
 #ifdef WIN32
   // For some reason, I get tracker thread starvation on Win32 when
   // adding key-frames. Perhaps this will help:
@@ -99,8 +99,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      //if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-      //BundleAdjustAll();
+      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+	BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -144,10 +144,10 @@ void MapMaker::HandleBadPoints()
   
       //BEGIN ADDED_CODE
       KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
-      KeyFrame &kOrig = *(p.pPatchSourceKF);
+      KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      if (D > 0.5)
+      if (D > 0.4)
 	p.bBad = true;
       //END ADDED_CODE
     }
@@ -235,6 +235,7 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
       cout << "  Could not init from stereo pair, try again." << endl;
       return false;
     }
+
   
   // Check that the initialiser estimated a non-zero baseline
   double dTransMagn = sqrt(se3.get_translation() * se3.get_translation());
@@ -264,7 +265,7 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   for(unsigned int i=0; i<vMatches.size(); i++)
     {
       MapPoint *p = new MapPoint();
-      
+
       // Patch source stuff:
       p->pPatchSourceKF = pkFirst;
       p->nSourceLevel = 0;
@@ -340,7 +341,8 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   
   mbBundleConverged_Full = false;
   mbBundleConverged_Recent = false;
-  
+
+
   while(!mbBundleConverged_Full)
     {
       BundleAdjustAll();
@@ -348,6 +350,9 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
 	return false;
     }
   
+
+
+
   // Rotate and translate the map so the dominant plane is at z=0:
   ApplyGlobalTransformationToMap(CalcPlaneAligner());
   mMap.bGood = true;
@@ -1196,7 +1201,7 @@ void MapMaker::GUICommandHandler(string sCommand, string sParams)  // Called by 
 	{
 	  ostringstream ost1;
 	  ost1 << "keyframes/" << i << ".jpg";
-//	  img_save(mMap.vpKeyFrames[i]->aLevels[0].im, ost1.str());
+	  //	  img_save(mMap.vpKeyFrames[i]->aLevels[0].im, ost1.str());
 	  
 	  ostringstream ost2;
 	  ost2 << "keyframes/" << i << ".info";
