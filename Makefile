@@ -43,10 +43,10 @@ CALIB_OBJECTS=	GLWindow2.o\
 All: PTAM CameraCalibrator
 
 PTAM: $(OBJECTS)
-	$(CC) -o PTAM $(OBJECTS) $(LINKFLAGS)
+	$(CC) -o PTAM.exe $(OBJECTS) $(LINKFLAGS)
 
 CameraCalibrator:$(CALIB_OBJECTS)
-	$(CC) -o CameraCalibrator $(CALIB_OBJECTS) $(LINKFLAGS)
+	$(CC) -o CameraCalibrator.exe $(CALIB_OBJECTS) $(LINKFLAGS)
 
 
 %.o: %.cc
