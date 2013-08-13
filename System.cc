@@ -54,6 +54,7 @@ System::System()
   GUI.ParseLine("Menu.AddMenuToggle Root \"View Map\" DrawMap Root");
   GUI.ParseLine("Menu.AddMenuToggle Root \"Draw AR\" DrawAR Root");
   
+
   mbDone = false;
 };
 

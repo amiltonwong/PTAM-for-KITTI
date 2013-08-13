@@ -65,8 +65,15 @@ void Tracker::Reset()
   mnFrame=0;
   mv6CameraVelocity = Zeros;
   mbJustRecoveredSoUseCoarse = false;
+
+  //ADDED_CODE
   mbNextFrame = false;
-  
+  mnInitialFrameCount = 0;
+  mTimer = 0;
+  mNumKF = 0;
+  mTotalFracFound = 1;
+
+
   // Tell the MapMaker to reset itself.. 
   // this may take some time, since the mapmaker thread may have to wait
   // for an abort-check during calculation, so sleep while waiting.
@@ -123,58 +130,7 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 	    glVertex(mCurrentKF.aLevels[0].vCorners[i]);
 	  glEnd();
 	}
-    }
-  
-  // Decide what to do - if there is a map, try to track the map ...
-  /* original PTAM code
-  if(mMap.IsGood())
-    {
-      if(mnLostFrames < 3)  // .. but only if we're not lost!
-	{
-	  if(mbUseSBIInit)
-	    CalcSBIRotation();
-	  ApplyMotionModel();       // 
-	  TrackMap();               //  These three lines do the main tracking work.
-	  UpdateMotionModel();      // 
-	  
-	  AssessTrackingQuality();  //  Check if we're lost or if tracking is poor.
-	  
-	  { // Provide some feedback for the user:
-	    mMessageForUser << "Tracking Map, quality ";
-	    if(mTrackingQuality == GOOD)  mMessageForUser << "good.";
-	    if(mTrackingQuality == DODGY) mMessageForUser << "poor.";
-	    if(mTrackingQuality == BAD)   mMessageForUser << "bad.";
-	    mMessageForUser << " Found:";
-	    for(int i=0; i<LEVELS; i++) mMessageForUser << " " << manMeasFound[i] << "/" << manMeasAttempted[i];
-	    //	    mMessageForUser << " Found " << mnMeasFound << " of " << mnMeasAttempted <<". (";
-	    mMessageForUser << " Map: " << mMap.vpPoints.size() << "P, " << mMap.vpKeyFrames.size() << "KF";
-	  }
-	  
-	  // Heuristics to check if a key-frame should be added to the map:
-	  if(mTrackingQuality == GOOD &&
-	     mMapMaker.NeedNewKeyFrame(mCurrentKF) &&
-	     mnFrame - mnLastKeyFrameDropped > 20  &&
-	     mMapMaker.QueueSize() < 3)
-	    {
-	      mMessageForUser << " Adding key-frame.";
-	      AddNewKeyFrame();
-	    };
-	}
-      else  // what if there is a map, but tracking has been lost?
-	{
-	  mMessageForUser << "** Attempting recovery **.";
-	  if(AttemptRecovery())
-	    {
-	      TrackMap();
-	      AssessTrackingQuality();
-	    }
-	}
-      if(mbDraw)
-	RenderGrid();
-    } 
-  else // If there is no map, try to make one.
-    TrackForInitialMap(); 
-    */
+    }  
 
   if(mMap.IsGood())
   {
@@ -182,10 +138,10 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
  	{
  	  if(mbUseSBIInit)
  	    CalcSBIRotation();
- 	  ApplyMotionModel();       //
+ 	  	  
+	  ApplyMotionModel();       //
  	  TrackMap();               //  These three lines do the main tracking work.
- 	  UpdateMotionModel();      //
-
+ 	  UpdateMotionModel();      // 
  	  AssessTrackingQuality();  //  Check if we're lost or if tracking is poor.
 
  	  { // Provide some feedback for the user:
@@ -206,7 +162,8 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
  	     mMapMaker.QueueSize() < 3)
  	  {
  	    mMessageForUser << " Adding key-frame.";
- 	    AddNewKeyFrame();
+
+	    AddNewKeyFrame();
  	  };
  	}
     else  // what if there is a map, but tracking has been lost?
@@ -222,8 +179,23 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
     if(mbDraw)
   	  RenderGrid();
 
-    if(mbUserPressedSpacebar)  // First spacebar = this is the first keyframe
+    //ADDED_CODE start
+
+    float keyframe_time = (float)((clock() - mTimer))/CLOCKS_PER_SEC;
+    //cout << keyframe_time << endl;    
+    
+
+
+    
+    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 2))  // First spacebar = this is the first keyframe
   	{
+	  cout << "Tracking KeyFrame number " << mNumKF << " with quality: " << mTotalFracFound << endl;
+	  if(mTotalFracFound < 0.3)
+	    {
+	      cout << "PAUSED due to poor quality" << endl;
+	      mPause = true;
+	    }
+	  mTimer = clock();
   	  mbUserPressedSpacebar = false;
   	  mbNextFrame = true;
   	}
@@ -232,6 +204,8 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
   }
   else // If there is no map, try to make one.
     TrackForInitialMap();
+
+  //ADDED_CODE end
   
   // GUI interface
   while(!mvQueuedCommands.empty())
@@ -334,6 +308,12 @@ void Tracker::GUICommandHandler(string sCommand, string sParams)  // Called by t
 	{
 	  mbUserPressedSpacebar = true;
 	}
+      else if(sParams == "p")
+	{
+	  mPause = (mPause) ? false : true;
+	  if (mPause)
+	    cout << "PAUSED" << endl;
+	}
       else if(sParams == "r")
 	{
 	  Reset();
@@ -366,22 +346,7 @@ void Tracker::TrackForInitialMap()
   static gvar3<int> gvnMaxSSD("Tracker.MiniPatchMaxSSD", 100000, SILENT);
   MiniPatch::mnMaxSSD = *gvnMaxSSD;
   
-  // What stage of initial tracking are we at?
-  /* original PTAM code
-  if(mnInitialStage == TRAIL_TRACKING_NOT_STARTED) 
-    {
-      if(mbUserPressedSpacebar)  // First spacebar = this is the first keyframe
-	{
-	  mbUserPressedSpacebar = false;
-	  TrailTracking_Start();
-	  mnInitialStage = TRAIL_TRACKING_STARTED;
-	}
-      else
-	mMessageForUser << "Point camera at planar scene and press spacebar to start tracking for initial map." << endl;
-      return;
-    };
-    */
-
+  //ADDED_CODE
   if(mnInitialStage == TRAIL_TRACKING_NOT_STARTED)
     {
       if(mbUserPressedSpacebar)  // First spacebar = this is the first keyframe
@@ -396,57 +361,48 @@ void Tracker::TrackForInitialMap()
       return;
     }
 
-  /* original PTAM code
+  //ADDED_CODE
   if(mnInitialStage == TRAIL_TRACKING_STARTED)
-    {
+  {
       int nGoodTrails = TrailTracking_Advance();  // This call actually tracks the trails
       if(nGoodTrails < 10) // if most trails have been wiped out, no point continuing.
-	{
-	  Reset();
-	  return;
-	}
+      {
+	cout << "Trail tracking failed!" << endl;
+	Reset();
+	return;
+      }
 
-      // If the user pressed spacebar here, use trails to run stereo and make the intial map..
       if(mbUserPressedSpacebar)
+      {
+	mnInitialFrameCount++;
+	cout << mnInitialFrameCount << endl;
+      }
+     
+      // If the user pressed spacebar here, use trails to run stereo and make the intial map..
+      if(mnInitialFrameCount > 0 && mbUserPressedSpacebar)
 	{
-	  mbUserPressedSpacebar = false;
+	  cout << "start matching" << endl;
 	  vector<pair<ImageRef, ImageRef> > vMatches;   // This is the format the mapmaker wants for the stereo pairs
 	  for(list<Trail>::iterator i = mlTrails.begin(); i!=mlTrails.end(); i++)
 	    vMatches.push_back(pair<ImageRef, ImageRef>(i->irInitialPos,
 							i->irCurrentPos));
 	  mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
 	  mnInitialStage = TRAIL_TRACKING_COMPLETE;
-	}
-      else
-	mMessageForUser << "Translate the camera slowly sideways, and press spacebar again to perform stereo init." << endl;
-    }
-   */
-  
-  if(mnInitialStage == TRAIL_TRACKING_STARTED)
-    {
-      int nGoodTrails = TrailTracking_Advance();  // This call actually tracks the trails
-      if(nGoodTrails < 10) // if most trails have been wiped out, no point continuing.
-	{
-      cout << "Trail tracking failed!" << endl;
-	  Reset();
-	  return;
-	}
-      
-      // If the user pressed spacebar here, use trails to run stereo and make the intial map..
-      if(mbUserPressedSpacebar)
-	{
-	  mbUserPressedSpacebar = false;
-	  mbNextFrame = true;
-	  vector<pair<ImageRef, ImageRef> > vMatches;   // This is the format the mapmaker wants for the stereo pairs
-	  for(list<Trail>::iterator i = mlTrails.begin(); i!=mlTrails.end(); i++)
-	    vMatches.push_back(pair<ImageRef, ImageRef>(i->irInitialPos,
-							i->irCurrentPos));
-	  mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
-	  mnInitialStage = TRAIL_TRACKING_COMPLETE;
+	  
 	}
       else
 	mMessageForUser << "press space bar again to perform stereo init." << endl;
-    }
+
+      if (mbUserPressedSpacebar)
+      {
+	mbUserPressedSpacebar = false;
+	mbNextFrame = true;
+	  
+      }
+  }
+  //END ADDED_CODE
+
+
 }
 
 // The current frame is to be the first keyframe!
@@ -469,6 +425,11 @@ void Tracker::TrailTracking_Start()
       if(!mCurrentKF.aLevels[0].im.in_image_with_border(vCornersAndSTScores[i].second, MiniPatch::mnHalfPatchSize))
 	continue;
       Trail t;
+
+      //ADDED_CODE
+      //      if(vCornersAndSTScores[i].second.y < (mirSize.y/2))
+      //continue;
+
       t.mPatch.SampleFromImage(vCornersAndSTScores[i].second, mCurrentKF.aLevels[0].im);
       t.irInitialPos = vCornersAndSTScores[i].second;
       t.irCurrentPos = t.irInitialPos;
@@ -1042,6 +1003,8 @@ void Tracker::UpdateMotionModel()
 // Time to add a new keyframe? The MapMaker handles most of this.
 void Tracker::AddNewKeyFrame()
 {
+  //ADDED_CODE
+  mNumKF++;
   mMapMaker.AddKeyFrame(mCurrentKF);
   mnLastKeyFrameDropped = mnFrame;
 }
@@ -1069,19 +1032,24 @@ void Tracker::AssessTrackingQuality()
   else
     {
       double dTotalFracFound = (double) nTotalFound / nTotalAttempted;
+
       double dLargeFracFound;
       if(nLargeAttempted > 10)
 	dLargeFracFound = (double) nLargeFound / nLargeAttempted;
       else
 	dLargeFracFound = dTotalFracFound;
 
-      cout << dTotalFracFound << endl;
-
+      //ADDED_CODE
+      mTotalFracFound = dTotalFracFound;
+      //cout << dTotalFracFound << endl;
+      //cout << dLargeFracFound << endl;
       //static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       //static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.13, SILENT);
       static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.02, SILENT);
-      
+ 
+
+
       if(dTotalFracFound > *gvdQualityGood)
 	mTrackingQuality = GOOD;
       else if(dLargeFracFound < *gvdQualityLost)
