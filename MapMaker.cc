@@ -99,8 +99,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-	BundleAdjustAll();
+      //      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+      //	BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -147,8 +147,8 @@ void MapMaker::HandleBadPoints()
       KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      if (D > 0.4)
-	p.bBad = true;
+      //      if (D > 0.4)
+      //	p.bBad = true;
       //END ADDED_CODE
     }
   

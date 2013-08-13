@@ -31,7 +31,7 @@
 #include <list>
 
 
-//#include <time.h>
+#include <time.h>
 
 class TrackerData;
 struct Trail    // This struct is used for initial correspondences of the first stereo pair.
@@ -136,10 +136,14 @@ protected:
   struct Command {std::string sCommand; std::string sParams; };
   std::vector<Command> mvQueuedCommands;
 
-	// ADDED_CODE
-	bool mbNextFrame;
-	int mnInitialFrameCount;
-	//clock_t mTimer;
+  // ADDED_CODE
+  bool mbNextFrame;
+  bool mPause;
+  int mnInitialFrameCount;
+  time_t mTimer;
+  int mNumKF;
+  double mTotalFracFound;
+  
 
 };
 
