@@ -187,7 +187,7 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 
 
     
-    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 2))  // First spacebar = this is the first keyframe
+    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 3))  // First spacebar = this is the first keyframe
   	{
 	  cout << "Tracking KeyFrame number " << mNumKF << " with quality: " << mTotalFracFound << endl;
 	  if(mTotalFracFound < 0.3)

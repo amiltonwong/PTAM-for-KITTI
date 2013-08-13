@@ -6,6 +6,8 @@
 #include "SmallMatrixOpts.h"
 #include "HomographyInit.h"
 
+#include "TrackerData.h" //ADDED_CODE
+
 #include <cvd/vector_image_ref.h>
 #include <cvd/vision.h>
 #include <cvd/image_interpolate.h>
@@ -143,9 +145,36 @@ void MapMaker::HandleBadPoints()
 	p.bBad = true;
   
       //BEGIN ADDED_CODE
+
+
+      // Ensure that this map point has an associated TrackerData struct.
+      /*
+      if(!p.pTData)
+	continue;
+	//p.pTData = new TrackerData(&p);   
+	//assert(p.pTData);
+      TrackerData &TData = *p.pTData;
+
       KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
-      KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
-      double D = KeyFrameLinearDist(kNew, kOrig);
+      SE3<> se3CamFromWorld = kNew.se3CfromW;
+      
+      // Project according to current view, and if it's not in the image, skip.
+      TData.Project(se3CamFromWorld, mCamera); //updates bInImage
+      if(!TData.bInImage)
+	{
+	  cout << "outofframe" << endl;
+	  p.nOutOfFrame++;
+	}
+      */
+      /*
+      if (p.nOutOfFrame > 10)
+	{
+	  p.bBad = true;
+	}
+      */
+      // KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
+      //KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
+      //double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
       //      if (D > 0.4)
       //	p.bBad = true;
