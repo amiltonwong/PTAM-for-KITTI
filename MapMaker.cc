@@ -101,8 +101,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-      	BundleAdjustAll();
+      // if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+      // 	BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -154,12 +154,12 @@ void MapMaker::HandleBadPoints()
 	continue;
 	//p.pTData = new TrackerData(&p);   
 	//assert(p.pTData);
-      /*
-      if (p.bMissedFrame)
-	{
-	p.bBad = true;
-	}
-      */
+
+      // if (p.bMissedFrame)
+      // 	{
+      // 	p.bBad = true;
+      // 	}
+
       /*
       TrackerData &TData = *p.pTData;
 
@@ -185,8 +185,9 @@ void MapMaker::HandleBadPoints()
       KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      // if (D > 0.4)		
-      // 	p.bBad = true;
+      if (D > 0.4)		
+      	p.bBad = true;
+
       
       //END ADDED_CODE
     }
@@ -359,9 +360,10 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   mMap.vpKeyFrames.push_back(pkSecond);
   pkFirst->MakeKeyFrame_Rest();
   pkSecond->MakeKeyFrame_Rest();
-  
-  for(int i=0; i<5; i++)
-    BundleAdjustAll();
+
+  //ADDED_CODE
+   for(int i=0; i<5; i++)
+     BundleAdjustAll();
 
   // Estimate the feature depth distribution in the first two key-frames
   // (Needed for epipolar search)
@@ -745,9 +747,14 @@ bool MapMaker::NeedNewKeyFrame(KeyFrame &kCurrent)
   KeyFrame *pClosest = ClosestKeyFrame(kCurrent);
   double dDist = KeyFrameLinearDist(kCurrent, *pClosest);
   dDist *= (1.0 / kCurrent.dSceneDepthMean);
+
+  //cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
   
   if(dDist > GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized)
+    {
+      //cout << "need new frame" << endl;
     return true;
+    }
   return false;
 }
 

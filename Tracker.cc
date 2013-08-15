@@ -157,12 +157,12 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 
  	  // Heuristics to check if a key-frame should be added to the map:
  	  if(mTrackingQuality == GOOD &&
- 	     mMapMaker.NeedNewKeyFrame(mCurrentKF) &&
+	     mMapMaker.NeedNewKeyFrame(mCurrentKF) &&
  	     mnFrame - mnLastKeyFrameDropped > 20  &&
  	     mMapMaker.QueueSize() < 3)
  	  {
  	    mMessageForUser << " Adding key-frame.";
-
+	    
 	    AddNewKeyFrame();
  	  };
  	}
@@ -184,11 +184,11 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
     float keyframe_time = (float)((clock() - mTimer))/CLOCKS_PER_SEC;
     //cout << keyframe_time << endl;    
     
-    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 2))  // First spacebar = this is the first keyframe
+    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 5))  // First spacebar = this is the first keyframe
       //if(!mPause && mbUserPressedSpacebar)
 	{
 	  cout << "Tracking KeyFrame number " << mNumKF << " with quality: " << mTotalFracFound << endl;
-	  if(mTotalFracFound < 0.3)
+	  if(mTotalFracFound < 0.2)
 	    {
 	      cout << "PAUSED due to poor quality" << endl;
 	      mPause = true;
@@ -1050,7 +1050,7 @@ void Tracker::AssessTrackingQuality()
       //cout << dLargeFracFound << endl;
       //static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       //static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.13, SILENT);
-      static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
+      static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.2, SILENT);
       static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.02, SILENT);
 
 
