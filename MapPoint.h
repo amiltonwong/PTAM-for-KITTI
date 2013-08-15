@@ -34,6 +34,8 @@ struct MapPoint
     nMEstimatorOutlierCount = 0;
     nMEstimatorInlierCount = 0;
     dCreationTime = CVD::timer.get_time();
+    nOutOfFrame = 0; //ADDED_CODE
+    bMissedFrame = false;
   };
   
   // Where in the world is this point? The main bit of information, really.
@@ -71,6 +73,10 @@ struct MapPoint
   
   // Random junk (e.g. for visualisation)
   double dCreationTime; //timer.get_time() time of creation
+
+  bool bMissedFrame;
+  int nOutOfFrame; //ADDED_CODE
+
 };
 
 #endif

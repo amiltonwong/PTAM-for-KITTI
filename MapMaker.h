@@ -34,6 +34,10 @@ struct MapMakerData
   {  return sMeasurementKFs.size(); }
 };
 
+//ADDED_CODE
+class TrackerData;
+
+
 // MapMaker dervives from CVD::Thread, so everything in void run() is its own thread.
 class MapMaker : protected CVD::Thread
 {

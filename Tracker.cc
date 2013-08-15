@@ -184,11 +184,9 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
     float keyframe_time = (float)((clock() - mTimer))/CLOCKS_PER_SEC;
     //cout << keyframe_time << endl;    
     
-
-
-    
     if(!mPause && (mbUserPressedSpacebar || keyframe_time > 2))  // First spacebar = this is the first keyframe
-  	{
+      //if(!mPause && mbUserPressedSpacebar)
+	{
 	  cout << "Tracking KeyFrame number " << mNumKF << " with quality: " << mTotalFracFound << endl;
 	  if(mTotalFracFound < 0.3)
 	    {
@@ -522,6 +520,8 @@ void Tracker::TrackMap()
   for(int i=0; i<LEVELS; i++)
     avPVS[i].reserve(500);
 
+  int notinimage=0;
+
   // For all points in the map..
   for(unsigned int i=0; i<mMap.vpPoints.size(); i++)
     {
@@ -532,9 +532,12 @@ void Tracker::TrackMap()
       
       // Project according to current view, and if it's not in the image, skip.
       TData.Project(mse3CamFromWorld, mCamera); 
-      if(!TData.bInImage)
-	continue;   
-      
+      if(!TData.bInImage) 
+	{
+	  //notinimage++;
+	  p.bMissedFrame = true;
+	  continue;   
+	}
       // Calculate camera projection derivatives of this point.
       TData.GetDerivsUnsafe(mCamera);
 
@@ -549,6 +552,8 @@ void Tracker::TrackMap()
       avPVS[TData.nSearchLevel].push_back(&TData);
     };
   
+  //  cout << "NOT IN IMAGE " << notinimage << endl;
+
   // Next: A large degree of faffing about and deciding which points are going to be measured!
   // First, randomly shuffle the individual levels of the PVS.
   for(int i=0; i<LEVELS; i++)
@@ -1047,7 +1052,6 @@ void Tracker::AssessTrackingQuality()
       //static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.13, SILENT);
       static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.02, SILENT);
- 
 
 
       if(dTotalFracFound > *gvdQualityGood)
