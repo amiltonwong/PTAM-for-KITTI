@@ -1,5 +1,6 @@
 #include "VideoSource.h"
 #include <cvd/image_io.h>
+#include <cvd/image.h>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -45,7 +46,23 @@ void VideoSource::GetAndFillFrameBWandRGB(Image<byte> &imBW, Image<Rgb<byte> > &
 {
   string path = CreateCurrentFileName();
   imBW = img_load(path);
+  /*
+  ImageRef a,b;
+  a.x = 100;
+  a.y = 100;
+  b.x = 300;
+  b.y = 100;
+  Image<byte> imBWsmall;
+  imBWsmall = imBW.sub_image(a,b);
+  */
+
   imRGB = img_load(path);
+  
+  /*
+  Image<Rgb<byte> > imRGBsmall;
+  imRGBsmall = imRGB.sub_image(a,b);
+  */
+
 }
 
 void VideoSource::IncreaseImageIndex()

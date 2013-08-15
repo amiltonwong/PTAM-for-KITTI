@@ -108,7 +108,8 @@ void MapMaker::run()
       // Very low priorty: re-find measurements marked as outliers
       if(mbBundleConverged_Recent && mbBundleConverged_Full && rand()%20 == 0 && QueueSize() == 0)
 	ReFindFromFailureQueue();
-      
+     
+
       CHECK_RESET;
       HandleBadPoints();
       
@@ -148,11 +149,17 @@ void MapMaker::HandleBadPoints()
 
 
       // Ensure that this map point has an associated TrackerData struct.
-      /*
+
       if(!p.pTData)
 	continue;
 	//p.pTData = new TrackerData(&p);   
 	//assert(p.pTData);
+
+      if (p.bMissedFrame)
+	{
+	p.bBad = true;
+	}
+      /*
       TrackerData &TData = *p.pTData;
 
       KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
@@ -172,18 +179,17 @@ void MapMaker::HandleBadPoints()
 	  p.bBad = true;
 	}
       */
-      // KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
-      //KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
-      //double D = KeyFrameLinearDist(kNew, kOrig);
+      /*
+      KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
+      KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
+      double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      //      if (D > 0.4)
-      //	p.bBad = true;
+      if (D > 0.3)
+	p.bBad = true;
+      */
       //END ADDED_CODE
     }
   
-  
-  
-
   // All points marked as bad will be erased - erase all records of them
   // from keyframes in which they might have been measured.
   for(unsigned int i=0; i<mMap.vpPoints.size(); i++)
