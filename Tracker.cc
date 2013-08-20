@@ -73,7 +73,7 @@ void Tracker::Reset()
   mTimer = 0;
   mNumKF = 0;
   mTotalFracFound = 1;
-  mNumFrame = 0;
+  mNumFrame = 1;
 
   // Tell the MapMaker to reset itself.. 
   // this may take some time, since the mapmaker thread may have to wait
@@ -192,7 +192,8 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
     
     if(!mPause && (mbUserPressedSpacebar || mbDelayFinished))  // First spacebar = this is the first keyframe
 	{
-	  cout << "Tracking KeyFrame number " << mNumKF << " from Frame number "<< mNumFrame << " with quality: " << mTotalFracFound << endl;
+	  cout << "Tracking KeyFrame number " << mNumKF << " from Frame number "<< mNumFrame;
+	  cout << " with quality: " << mTotalFracFound << " and mean scene depth " << mCurrentKF.dSceneDepthMean << endl;
 	  if(mTotalFracFound < 0.2)
 	    {
 	      cout << "PAUSED due to poor quality" << endl;
@@ -428,7 +429,7 @@ void Tracker::TrailTracking_Start()
     };
   sort(vCornersAndSTScores.begin(), vCornersAndSTScores.end());  // Sort according to Shi-Tomasi score
   //  int nToAdd = GV2.GetInt("MaxInitialTrails", 1000, SILENT);
-  int nToAdd = GV2.GetInt("MaxInitialTrails", 1000, SILENT);
+  int nToAdd = GV2.GetInt("MaxInitialTrails", 2000, SILENT);
 
 
   // cout << "num corners " <<  vCornersAndSTScores.size() << endl; 

@@ -37,7 +37,8 @@ MapMaker::MapMaker(Map& m, const ATANCamera &cam)
   Reset();
   start(); // This CVD::thread func starts the map-maker thread with function run()
   GUI.RegisterCommand("SaveMap", GUICommandCallBack, this);
-  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 0.1, SILENT); // Default to 10cm (0.1) between keyframes
+  //  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 0.1, SILENT); // Default to 10cm (0.1) between keyframes
+  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 1.0, SILENT); // Default to 1m (1.0) between keyframes
 };
 
 void MapMaker::Reset()
@@ -185,7 +186,8 @@ void MapMaker::HandleBadPoints()
       KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      if (D > 0.4)		
+      // if (D > 0.4)
+      if (D > 4*mdWiggleScale) 
       	p.bBad = true;
 
       // Attempt at removing points that are behind initial position
@@ -389,7 +391,7 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
 
 
   int nNumBAIter = 0;
-  while(!mbBundleConverged_Full && nNumBAIter < 50)
+  while(!mbBundleConverged_Full && nNumBAIter < 40)
     {
       BundleAdjustAll();
       if(mbResetRequested)
@@ -758,8 +760,14 @@ bool MapMaker::NeedNewKeyFrame(KeyFrame &kCurrent)
   dDist *= (1.0 / kCurrent.dSceneDepthMean);
 
 
-  double thresh = GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized;
-  cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
+  if (kCurrent.dSceneDepthMean > 1e+5)
+    {
+      cout << "bad estimation of scene depth...greater than 1e+5 " << endl;
+      return true;
+    }
+
+  // double thresh = GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized;
+  // cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
   //  cout << " threshhold is " << thresh << endl;
   //  cout << " keyframe dist is " << dDist << endl;
   
