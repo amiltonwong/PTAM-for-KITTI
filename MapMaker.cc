@@ -37,7 +37,8 @@ MapMaker::MapMaker(Map& m, const ATANCamera &cam)
   Reset();
   start(); // This CVD::thread func starts the map-maker thread with function run()
   GUI.RegisterCommand("SaveMap", GUICommandCallBack, this);
-  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 0.1, SILENT); // Default to 10cm (0.1) between keyframes
+  //  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 0.1, SILENT); // Default to 10cm (0.1) between keyframes
+  GV3::Register(mgvdWiggleScale, "MapMaker.WiggleScale", 1.0, SILENT); // Default to 1m (1.0) between keyframes
 };
 
 void MapMaker::Reset()
@@ -101,8 +102,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-      	BundleAdjustAll();
+      //      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+      //BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -154,12 +155,12 @@ void MapMaker::HandleBadPoints()
 	continue;
 	//p.pTData = new TrackerData(&p);   
 	//assert(p.pTData);
-      /*
-      if (p.bMissedFrame)
-	{
-	p.bBad = true;
-	}
-      */
+
+      // if (p.bMissedFrame)
+      // 	{
+      // 	p.bBad = true;
+      // 	}
+
       /*
       TrackerData &TData = *p.pTData;
 
@@ -185,8 +186,17 @@ void MapMaker::HandleBadPoints()
       KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
-      // if (D > 0.4)		
-      // 	p.bBad = true;
+      // if (D > 0.4)
+      if (D > 4*mdWiggleScale) 
+      	p.bBad = true;
+
+      // Attempt at removing points that are behind initial position
+      // if(p.v3WorldPos[2] < 0.0)
+      //  	{
+      // 	  p.bBad = true;
+      // 	}
+
+
       
       //END ADDED_CODE
     }
@@ -359,9 +369,10 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   mMap.vpKeyFrames.push_back(pkSecond);
   pkFirst->MakeKeyFrame_Rest();
   pkSecond->MakeKeyFrame_Rest();
-  
-  for(int i=0; i<5; i++)
-    BundleAdjustAll();
+
+  //ADDED_CODE
+   for(int i=0; i<5; i++)
+     BundleAdjustAll();
 
   // Estimate the feature depth distribution in the first two key-frames
   // (Needed for epipolar search)
@@ -379,11 +390,13 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   mbBundleConverged_Recent = false;
 
 
-  while(!mbBundleConverged_Full)
+  int nNumBAIter = 0;
+  while(!mbBundleConverged_Full && nNumBAIter < 20)
     {
       BundleAdjustAll();
       if(mbResetRequested)
 	return false;
+      nNumBAIter++;
     }
   
 
@@ -745,9 +758,28 @@ bool MapMaker::NeedNewKeyFrame(KeyFrame &kCurrent)
   KeyFrame *pClosest = ClosestKeyFrame(kCurrent);
   double dDist = KeyFrameLinearDist(kCurrent, *pClosest);
   dDist *= (1.0 / kCurrent.dSceneDepthMean);
+
+
+  if (kCurrent.dSceneDepthMean > 1e+5)
+    {
+      cout << "bad estimation of scene depth...greater than 1e+5 " << endl;
+      return true;
+    }
+
+  // double thresh = GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized;
+  // cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
+  //  cout << " threshhold is " << thresh << endl;
+  //  cout << " keyframe dist is " << dDist << endl;
   
+//  if (kCurrent.dSceneDepthMean > 100)
+  //return true; 
+  
+
   if(dDist > GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized)
+    {
+      //cout << "need new frame. dDist is: " << dDist << "thresh is " <<  GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized << endl;
     return true;
+    }
   return false;
 }
 
@@ -878,6 +910,8 @@ void MapMaker::BundleAdjust(set<KeyFrame*> sAdjustSet, set<KeyFrame*> sFixedSet,
   
   // Run the bundle adjuster. This returns the number of successful iterations
   int nAccepted = b.Compute(&mbBundleAbortRequested);
+
+  //  cout << "num accepted " << nAccepted << endl;
   
   if(nAccepted < 0)
     {

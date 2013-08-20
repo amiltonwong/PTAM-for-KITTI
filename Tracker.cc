@@ -68,12 +68,13 @@ void Tracker::Reset()
 
   //ADDED_CODE
   mbNextFrame = false;
+  mbDelayFinished = false;
   mnInitialFrameCount = 0;
   mTimer = 0;
   mNumKF = 0;
   mTotalFracFound = 1;
-
-
+  mNumFrame = 1;
+  mFollowCameraView = false;
   // Tell the MapMaker to reset itself.. 
   // this may take some time, since the mapmaker thread may have to wait
   // for an abort-check during calculation, so sleep while waiting.
@@ -132,6 +133,11 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 	}
     }  
 
+
+  float keyframe_time = (float)((clock() - mTimer))/CLOCKS_PER_SEC;
+  if (keyframe_time > 5)
+    mbDelayFinished = true;
+
   if(mMap.IsGood())
   {
     if(mnLostFrames < 3)  // .. but only if we're not lost!
@@ -156,14 +162,16 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
  	  }
 
  	  // Heuristics to check if a key-frame should be added to the map:
- 	  if(mTrackingQuality == GOOD &&
- 	     mMapMaker.NeedNewKeyFrame(mCurrentKF) &&
+ 	  if(mbDelayFinished &&
+	     mTrackingQuality == GOOD &&
+	     mMapMaker.NeedNewKeyFrame(mCurrentKF) &&
  	     mnFrame - mnLastKeyFrameDropped > 20  &&
  	     mMapMaker.QueueSize() < 3)
  	  {
  	    mMessageForUser << " Adding key-frame.";
-
+	    //cout << "Adding Keyframe " << mNumKF << "from Frame " << mNumFrame << endl;
 	    AddNewKeyFrame();
+	    
  	  };
  	}
     else  // what if there is a map, but tracking has been lost?
@@ -181,21 +189,21 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 
     //ADDED_CODE start
 
-    float keyframe_time = (float)((clock() - mTimer))/CLOCKS_PER_SEC;
-    //cout << keyframe_time << endl;    
     
-    if(!mPause && (mbUserPressedSpacebar || keyframe_time > 2))  // First spacebar = this is the first keyframe
-      //if(!mPause && mbUserPressedSpacebar)
+    if(!mPause && (mbUserPressedSpacebar || mbDelayFinished))  // First spacebar = this is the first keyframe
 	{
-	  cout << "Tracking KeyFrame number " << mNumKF << " with quality: " << mTotalFracFound << endl;
-	  if(mTotalFracFound < 0.3)
+	  cout << "Tracking KeyFrame number " << mNumKF << " from Frame number "<< mNumFrame;
+	  cout << " with quality: " << mTotalFracFound << " and mean scene depth " << mCurrentKF.dSceneDepthMean << endl;
+	  if(mTotalFracFound < 0.2)
 	    {
 	      cout << "PAUSED due to poor quality" << endl;
 	      mPause = true;
 	    }
 	  mTimer = clock();
-  	  mbUserPressedSpacebar = false;
+ 	  mbUserPressedSpacebar = false;
   	  mbNextFrame = true;
+	  mbDelayFinished = false;
+	  mNumFrame++;
   	}
     else
 	  mMessageForUser << "press space bar to track next frame." << endl;
@@ -316,6 +324,10 @@ void Tracker::GUICommandHandler(string sCommand, string sParams)  // Called by t
 	{
 	  Reset();
 	}
+      else if(sParams == "f")
+	{
+	  mFollowCameraView = (mFollowCameraView) ? false : true;
+	}
       else if(sParams == "q" || sParams == "Escape")
 	{
 	  GUI.ParseLine("quit");
@@ -386,7 +398,11 @@ void Tracker::TrackForInitialMap()
 							i->irCurrentPos));
 	  mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
 	  mnInitialStage = TRAIL_TRACKING_COMPLETE;
-	  
+
+ 	  mTimer = clock();
+ 	  mbUserPressedSpacebar = false;
+	  //mse3FirstCamFromWorld = mFirstKF.se3CfromW;
+	  mse3FirstCamFromWorld = mse3CamFromWorld;
 	}
       else
 	mMessageForUser << "press space bar again to perform stereo init." << endl;
@@ -409,6 +425,9 @@ void Tracker::TrailTracking_Start()
   mCurrentKF.MakeKeyFrame_Rest();  // This populates the Candidates list, which is Shi-Tomasi thresholded.
   mFirstKF = mCurrentKF; 
   vector<pair<double,ImageRef> > vCornersAndSTScores;
+
+  // vector<vector<int> > vnPointGrid;
+
   for(unsigned int i=0; i<mCurrentKF.aLevels[0].vCandidates.size(); i++)  // Copy candidates into a trivially sortable vector
     {                                                                     // so that we can choose the image corners with max ST score
       Candidate &c = mCurrentKF.aLevels[0].vCandidates[i];
@@ -417,7 +436,13 @@ void Tracker::TrailTracking_Start()
       vCornersAndSTScores.push_back(pair<double,ImageRef>(-1.0 * c.dSTScore, c.irLevelPos)); // negative so highest score first in sorted list
     };
   sort(vCornersAndSTScores.begin(), vCornersAndSTScores.end());  // Sort according to Shi-Tomasi score
-  int nToAdd = GV2.GetInt("MaxInitialTrails", 1000, SILENT);
+  //  int nToAdd = GV2.GetInt("MaxInitialTrails", 1000, SILENT);
+  int nToAdd = GV2.GetInt("MaxInitialTrails", 2000, SILENT);
+
+
+  // cout << "num corners " <<  vCornersAndSTScores.size() << endl; 
+
+
   for(unsigned int i = 0; i<vCornersAndSTScores.size() && nToAdd > 0; i++)
     {
       if(!mCurrentKF.aLevels[0].im.in_image_with_border(vCornersAndSTScores[i].second, MiniPatch::mnHalfPatchSize))
@@ -1050,7 +1075,7 @@ void Tracker::AssessTrackingQuality()
       //cout << dLargeFracFound << endl;
       //static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
       //static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.13, SILENT);
-      static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.3, SILENT);
+      static gvar3<double> gvdQualityGood("Tracker.TrackingQualityGood", 0.2, SILENT);
       static gvar3<double> gvdQualityLost("Tracker.TrackingQualityLost", 0.02, SILENT);
 
 
@@ -1103,7 +1128,10 @@ void Tracker::ResetNextFrameFlag()
 	mbNextFrame = false;
 }
 
-
+bool Tracker::GetFollowFlag()
+{
+  return mFollowCameraView;
+}
 
 
 

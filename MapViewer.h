@@ -24,9 +24,10 @@ class MapViewer
 {
 public:
   MapViewer(Map &map, GLWindow2 &glw);
-  void DrawMap(SE3<> se3CamFromWorld);
+  void DrawMap(SE3<> se3CamFromWorld, bool follow);
   std::string GetMessageForUser();
-  
+  float ScaleFactor; 
+
 protected:
   Map &mMap;
   GLWindow2 &mGLWindow;
@@ -41,6 +42,9 @@ protected:
   SE3<> mse3ViewerFromWorld;
 
   std::ostringstream mMessageForUser;
+
+  bool mFirstKFFound;
+
 };
 
 #endif
