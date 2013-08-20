@@ -74,7 +74,7 @@ void Tracker::Reset()
   mNumKF = 0;
   mTotalFracFound = 1;
   mNumFrame = 1;
-
+  mFollowCameraView = false;
   // Tell the MapMaker to reset itself.. 
   // this may take some time, since the mapmaker thread may have to wait
   // for an abort-check during calculation, so sleep while waiting.
@@ -324,6 +324,10 @@ void Tracker::GUICommandHandler(string sCommand, string sParams)  // Called by t
 	{
 	  Reset();
 	}
+      else if(sParams == "f")
+	{
+	  mFollowCameraView = (mFollowCameraView) ? false : true;
+	}
       else if(sParams == "q" || sParams == "Escape")
 	{
 	  GUI.ParseLine("quit");
@@ -397,7 +401,8 @@ void Tracker::TrackForInitialMap()
 
  	  mTimer = clock();
  	  mbUserPressedSpacebar = false;
-
+	  //mse3FirstCamFromWorld = mFirstKF.se3CfromW;
+	  mse3FirstCamFromWorld = mse3CamFromWorld;
 	}
       else
 	mMessageForUser << "press space bar again to perform stereo init." << endl;
@@ -1123,7 +1128,10 @@ void Tracker::ResetNextFrameFlag()
 	mbNextFrame = false;
 }
 
-
+bool Tracker::GetFollowFlag()
+{
+  return mFollowCameraView;
+}
 
 
 

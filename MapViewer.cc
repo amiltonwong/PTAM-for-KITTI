@@ -19,8 +19,8 @@ MapViewer::MapViewer(Map &map, GLWindow2 &glw):
   //  mse3ViewerFromWorld = 
   //SE3<>::exp(makeVector(0,0,2,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI,0,0));
   mse3ViewerFromWorld = 
-    SE3<>::exp(makeVector(0,0,(int)20*ScaleFactor,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI*ScaleFactor,0,0));
-
+    SE3<>::exp(makeVector(0,0,2,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI,0,0));
+  mFirstKFFound = false;
 }
 
 void MapViewer::DrawMapDots()
@@ -129,9 +129,19 @@ void MapViewer::DrawGrid()
   // mGLWindow.PrintString("z");
 }
 
-void MapViewer::DrawMap(SE3<> se3CamFromWorld)
+void MapViewer::DrawMap(SE3<> se3CamFromWorld, bool follow)
 {
   mMessageForUser.str(""); // Wipe the user message clean
+
+  if (!mFirstKFFound)
+    {
+      //      mse3ViewerFromWorld = SE3<>(makeVector(0,1.5,0,M_PI/16,0,0)) * se3CamFromWorld;// * SE3<>::exp(makeVector(10,0,0,0,0,0));
+      mse3ViewerFromWorld = se3CamFromWorld * SE3<>(makeVector(0,-5,0.5,M_PI/16,0,0));
+      mFirstKFFound = true;
+    }
+
+  if (follow)
+    mse3ViewerFromWorld = se3CamFromWorld;
   
   // Update viewer position according to mouse input:
   {

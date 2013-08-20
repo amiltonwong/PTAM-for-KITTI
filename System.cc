@@ -105,7 +105,7 @@ void System::Run()
 
       
       if(bDrawMap)
-	mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
+	mpMapViewer->DrawMap(mpTracker->GetCurrentPose(), mpTracker->GetFollowFlag());
       else if(bDrawAR)
 	mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
 

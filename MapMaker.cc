@@ -391,7 +391,7 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
 
 
   int nNumBAIter = 0;
-  while(!mbBundleConverged_Full && nNumBAIter < 40)
+  while(!mbBundleConverged_Full && nNumBAIter < 20)
     {
       BundleAdjustAll();
       if(mbResetRequested)

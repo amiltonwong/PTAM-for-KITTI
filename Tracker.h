@@ -55,9 +55,10 @@ public:
   std::string GetMessageForUser();
 
   // Added properties & methods
+  bool GetFollowFlag();
   bool GetNextFrameFlag();
   void ResetNextFrameFlag();
-
+  SE3<> mse3FirstCamFromWorld;
   
 protected:
   KeyFrame mCurrentKF;            // The current working frame as a keyframe struct
@@ -140,12 +141,13 @@ protected:
   bool mbNextFrame;
   bool mbDelayFinished;
   bool mPause;
+  bool mFollowCameraView;
   int mnInitialFrameCount;
   time_t mTimer;
   int mNumKF;
   int mNumFrame;
   double mTotalFracFound;
-  
+
 
 };
 
