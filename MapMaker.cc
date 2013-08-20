@@ -101,8 +101,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      // if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-      // 	BundleAdjustAll();
+      //      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+      //BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -187,6 +187,13 @@ void MapMaker::HandleBadPoints()
       //cout << D << endl;
       if (D > 0.4)		
       	p.bBad = true;
+
+      // Attempt at removing points that are behind initial position
+      // if(p.v3WorldPos[2] < 0.0)
+      //  	{
+      // 	  p.bBad = true;
+      // 	}
+
 
       
       //END ADDED_CODE
@@ -381,11 +388,13 @@ bool MapMaker::InitFromStereo(KeyFrame &kF,
   mbBundleConverged_Recent = false;
 
 
-  while(!mbBundleConverged_Full)
+  int nNumBAIter = 0;
+  while(!mbBundleConverged_Full && nNumBAIter < 50)
     {
       BundleAdjustAll();
       if(mbResetRequested)
 	return false;
+      nNumBAIter++;
     }
   
 
@@ -748,11 +757,19 @@ bool MapMaker::NeedNewKeyFrame(KeyFrame &kCurrent)
   double dDist = KeyFrameLinearDist(kCurrent, *pClosest);
   dDist *= (1.0 / kCurrent.dSceneDepthMean);
 
-  //cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
+
+  double thresh = GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized;
+  cout << "mean scene depth is " << kCurrent.dSceneDepthMean << endl;
+  //  cout << " threshhold is " << thresh << endl;
+  //  cout << " keyframe dist is " << dDist << endl;
   
+//  if (kCurrent.dSceneDepthMean > 100)
+  //return true; 
+  
+
   if(dDist > GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized)
     {
-      //cout << "need new frame" << endl;
+      //cout << "need new frame. dDist is: " << dDist << "thresh is " <<  GV2.GetDouble("MapMaker.MaxKFDistWiggleMult",1.0,SILENT) * mdWiggleScaleDepthNormalized << endl;
     return true;
     }
   return false;
@@ -885,6 +902,8 @@ void MapMaker::BundleAdjust(set<KeyFrame*> sAdjustSet, set<KeyFrame*> sFixedSet,
   
   // Run the bundle adjuster. This returns the number of successful iterations
   int nAccepted = b.Compute(&mbBundleAbortRequested);
+
+  //  cout << "num accepted " << nAccepted << endl;
   
   if(nAccepted < 0)
     {

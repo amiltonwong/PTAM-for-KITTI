@@ -98,8 +98,11 @@ void System::Run()
       
       bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
       bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
-      
+
+
+      // CALL TO TRACKER -----------------
       mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
+
       
       if(bDrawMap)
 	mpMapViewer->DrawMap(mpTracker->GetCurrentPose());

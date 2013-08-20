@@ -13,7 +13,7 @@ VideoSource::VideoSource()
 
   //imgloc = _imgloc;
   
-  imgloc = "/home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/0001/";
+  imgloc = "/home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/0000/";
  
   imgindex = 0;
   

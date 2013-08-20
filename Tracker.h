@@ -138,10 +138,12 @@ protected:
 
   // ADDED_CODE
   bool mbNextFrame;
+  bool mbDelayFinished;
   bool mPause;
   int mnInitialFrameCount;
   time_t mTimer;
   int mNumKF;
+  int mNumFrame;
   double mTotalFracFound;
   
 
