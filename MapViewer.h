@@ -26,7 +26,8 @@ public:
   MapViewer(Map &map, GLWindow2 &glw);
   void DrawMap(SE3<> se3CamFromWorld);
   std::string GetMessageForUser();
-  
+  float ScaleFactor; 
+
 protected:
   Map &mMap;
   GLWindow2 &mGLWindow;
@@ -41,6 +42,8 @@ protected:
   SE3<> mse3ViewerFromWorld;
 
   std::ostringstream mMessageForUser;
+
+
 };
 
 #endif

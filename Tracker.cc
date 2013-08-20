@@ -200,7 +200,7 @@ void Tracker::TrackFrame(Image<byte> &imFrame, bool bDraw)
 	      mPause = true;
 	    }
 	  mTimer = clock();
-  	  mbUserPressedSpacebar = false;
+ 	  mbUserPressedSpacebar = false;
   	  mbNextFrame = true;
 	  mbDelayFinished = false;
 	  mNumFrame++;
@@ -394,7 +394,10 @@ void Tracker::TrackForInitialMap()
 							i->irCurrentPos));
 	  mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
 	  mnInitialStage = TRAIL_TRACKING_COMPLETE;
-	  
+
+ 	  mTimer = clock();
+ 	  mbUserPressedSpacebar = false;
+
 	}
       else
 	mMessageForUser << "press space bar again to perform stereo init." << endl;

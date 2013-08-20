@@ -13,8 +13,14 @@ using namespace std;
 MapViewer::MapViewer(Map &map, GLWindow2 &glw):
   mMap(map), mGLWindow(glw)
 {
+
+  ScaleFactor = 1.0;
+  //ScaleFactor = 1.0; //default scale factor was 0.1 (10 cm)
+  //  mse3ViewerFromWorld = 
+  //SE3<>::exp(makeVector(0,0,2,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI,0,0));
   mse3ViewerFromWorld = 
-    SE3<>::exp(makeVector(0,0,2,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI,0,0));
+    SE3<>::exp(makeVector(0,0,(int)20*ScaleFactor,0,0,0)) * SE3<>::exp(makeVector(0,0,0,0.8 * M_PI*ScaleFactor,0,0));
+
 }
 
 void MapViewer::DrawMapDots()
@@ -52,7 +58,8 @@ void MapViewer::DrawGrid()
   glBegin(GL_LINES);
   
   // Draw a larger grid around the outside..
-  double dGridInterval = 0.1;
+   double dGridInterval = 0.1;
+  // double dGridInterval = 1.0*ScaleFactor;
   
   double dMin = -100.0 * dGridInterval;
   double dMax =  100.0 * dGridInterval;
@@ -113,13 +120,13 @@ void MapViewer::DrawGrid()
   glVertex3d(0,0,1);
   glEnd();
   
-//   glColor3f(0.8,0.8,0.8);
-//   glRasterPos3f(1.1,0,0);
-//   mGLWindow.PrintString("x");
-//   glRasterPos3f(0,1.1,0);
-//   mGLWindow.PrintString("y");
-//   glRasterPos3f(0,0,1.1);
-//   mGLWindow.PrintString("z");
+  // glColor3f(0.8,0.8,0.8);
+  // glRasterPos3f(1.1,0,0);
+  // mGLWindow.PrintString("x");
+  // glRasterPos3f(0,1.1,0);
+  // mGLWindow.PrintString("y");
+  // glRasterPos3f(0,0,1.1);
+  // mGLWindow.PrintString("z");
 }
 
 void MapViewer::DrawMap(SE3<> se3CamFromWorld)
@@ -171,7 +178,7 @@ void MapViewer::SetupFrustum()
 {
   glMatrixMode(GL_PROJECTION);  
   glLoadIdentity();
-  double zNear = 0.03;
+  double zNear = 0.3*ScaleFactor;
   glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,50);
   glScalef(1,1,-1);
   return;
@@ -199,13 +206,13 @@ void MapViewer::DrawCamera(SE3<> se3CfromW, bool bSmall)
   glBegin(GL_LINES);
   glColor3f(1,0,0);
   glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.1f, 0.0f, 0.0f);
+  glVertex3f(1.0f*ScaleFactor, 0.0f, 0.0f);
   glColor3f(0,1,0);
   glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.1f, 0.0f);
+  glVertex3f(0.0f, 1.0f*ScaleFactor, 0.0f);
   glColor3f(1,1,1);
   glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 0.1f);
+  glVertex3f(0.0f, 0.0f, 1.0f*ScaleFactor);
   glEnd();
 
   
