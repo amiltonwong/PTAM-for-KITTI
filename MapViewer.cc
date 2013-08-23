@@ -212,7 +212,8 @@ void MapViewer::SetupFrustum()
   glMatrixMode(GL_PROJECTION);  
   glLoadIdentity();
   double zNear = 0.3*ScaleFactor;
-  glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,50);
+  //glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,50);
+  glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,200);
   glScalef(1,1,-1);
   return;
 };
