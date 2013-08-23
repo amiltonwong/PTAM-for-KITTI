@@ -14,6 +14,7 @@ using namespace TooN;
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 struct Tukey
 {
@@ -76,6 +77,13 @@ inline double Tukey::ObjectiveScore(double dErrorSquared, const double dSigmaSqu
 inline double Tukey::FindSigmaSquared(std::vector<double> &vdErrorSquared)
 { 
   double dSigmaSquared; 
+
+  // if (vdErrorSquared.size() <= 0)
+  //   {
+  //     std::cout << "FindSigmasqaured is empty" << std::endl;
+  //     return 0;
+  //   }
+
   assert(vdErrorSquared.size() > 0);
   std::sort(vdErrorSquared.begin(), vdErrorSquared.end());
   double dMedianSquared = vdErrorSquared[vdErrorSquared.size() / 2];

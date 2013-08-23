@@ -17,6 +17,8 @@ using namespace TooN;
 #include <TooN/se3.h>
 #include <sstream>
 #include "GLWindow2.h"
+#include <cmath>
+#include <iostream>
 
 class Map;
 
@@ -33,11 +35,13 @@ protected:
   GLWindow2 &mGLWindow;
   
   void DrawGrid();
-  void DrawMapDots();
+  void DrawMapDots(SE3<> se3CamFromWorld);
   void DrawCamera(SE3<> se3, bool bSmall=false);
   void SetupFrustum();
   void SetupModelView(SE3<> se3WorldFromCurrent = SE3<>());
   
+  void HtoRGB( float *r, float *g, float *b, float h );
+
   Vector<3> mv3MassCenter;
   SE3<> mse3ViewerFromWorld;
 

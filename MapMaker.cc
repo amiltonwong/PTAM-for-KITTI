@@ -591,7 +591,8 @@ bool MapMaker::AddPointEpipolar(KeyFrame &kSrc,
   Vector<2> v2B = project(v3RayEnd_TC);
   Vector<2> v2AlongProjectedLine = v2A-v2B;
   
-  if(v2AlongProjectedLine * v2AlongProjectedLine < 0.00000001)
+  // if(v2AlongProjectedLine * v2AlongProjectedLine < 0.00000001*) //orig
+  if(v2AlongProjectedLine * v2AlongProjectedLine < 0.0000000001)
     {
       cout << "v2AlongProjectedLine too small." << endl;
       return false;
