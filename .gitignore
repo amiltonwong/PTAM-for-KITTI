@@ -4,6 +4,7 @@
 *#
 *.r
 *.pdf
+*.txt
 Build
 Lib
 
