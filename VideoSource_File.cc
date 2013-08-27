@@ -8,12 +8,14 @@
 using namespace CVD;
 using namespace std;
 
-VideoSource::VideoSource() 
+VideoSource::VideoSource(char* imgset) 
 {
 
   //imgloc = _imgloc;
   
-  imgloc = "/home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/0002/";
+  imgloc = "/home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/";
+  imgloc.append(imgset);
+  imgloc.append("/");
  
   imgindex = 0;
   

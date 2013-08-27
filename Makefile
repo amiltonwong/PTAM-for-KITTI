@@ -40,13 +40,15 @@ CALIB_OBJECTS=	GLWindow2.o\
 		ATANCamera.o \
 		CameraCalibrator.o
 
-All: PTAM CameraCalibrator
+#All: PTAM CameraCalibrator
+
+All: PTAM
 
 PTAM: $(OBJECTS)
 	$(CC) -o PTAM.exe $(OBJECTS) $(LINKFLAGS)
 
-CameraCalibrator:$(CALIB_OBJECTS)
-	$(CC) -o CameraCalibrator.exe $(CALIB_OBJECTS) $(LINKFLAGS)
+#CameraCalibrator:$(CALIB_OBJECTS)
+#	$(CC) -o CameraCalibrator.exe $(CALIB_OBJECTS) $(LINKFLAGS)
 
 
 %.o: %.cc

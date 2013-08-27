@@ -23,20 +23,43 @@ MapViewer::MapViewer(Map &map, GLWindow2 &glw):
   mFirstKFFound = false;
 }
 
-void MapViewer::DrawMapDots()
+void MapViewer::DrawMapDots(SE3<> se3CamFromWorld)
 {
   SetupFrustum();
   SetupModelView();
   
   int nForMass = 0;
   glColor3f(0,1,1);
-  glPointSize(3);
+   glPointSize(3);
   glBegin(GL_POINTS);
   mv3MassCenter = Zeros;
   for(size_t i=0; i<mMap.vpPoints.size(); i++)
     {
       Vector<3> v3Pos = mMap.vpPoints[i]->v3WorldPos;
-      glColor(gavLevelColors[mMap.vpPoints[i]->nSourceLevel]);
+      Vector<3> v3PosK = se3CamFromWorld * v3Pos;
+      float dist = (float)v3PosK[2];
+      float h = ceil(exp(-1*v3PosK[2]/50)*360);
+      //float h = -3.6*dist + 360;
+      if (h>360)
+	h=360.0f;
+      
+      //h = i%360;
+
+      float r,g,b;
+      HtoRGB(&r,&g,&b,h);
+
+      r/=360;
+      g/=360;
+      b/=360;
+
+      //std::cout << "dist: " << dist << " hue: " << h << endl;
+
+      //      Rgb<float> pcolor(r,g,b);
+      //TooN::Vector<3> pcolor(r,g,b);
+      glColor3f(r,g,b);
+      // glColor(gavLevelColors[mMap.vpPoints[i]->nSourceLevel]);
+      // glPointSize(size);
+
       if(v3Pos * v3Pos < 10000)
 	{
 	  nForMass++;
@@ -166,7 +189,7 @@ void MapViewer::DrawMap(SE3<> se3CamFromWorld, bool follow)
 
   glEnable(GL_DEPTH_TEST);
   DrawGrid();
-  DrawMapDots();
+  DrawMapDots(se3CamFromWorld);
   DrawCamera(se3CamFromWorld);
   for(size_t i=0; i<mMap.vpKeyFrames.size(); i++)
     DrawCamera(mMap.vpKeyFrames[i]->se3CfromW, true);
@@ -189,7 +212,8 @@ void MapViewer::SetupFrustum()
   glMatrixMode(GL_PROJECTION);  
   glLoadIdentity();
   double zNear = 0.3*ScaleFactor;
-  glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,50);
+  //glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,50);
+  glFrustum(-zNear, zNear, 0.75*zNear,-0.75*zNear,zNear,200);
   glScalef(1,1,-1);
   return;
 };
@@ -242,5 +266,140 @@ void MapViewer::DrawCamera(SE3<> se3CfromW, bool bSmall)
   }
   
 }
+
+void MapViewer::HtoRGB(float *r, float *g, float *b, float h)
+{
+
+  if (h < 36)
+    {*r=255; *g=0; *b=0;}
+  else if (h < 72)
+    {*r=255; *g=154; *b=0;}
+  else if (h < 108)
+    {*r=205; *g=255; *b=0;}
+  else if (h < 144)
+    {*r=51; *g=255; *b=0;}
+  else if (h < 180)
+    { *r=0; *g=255; *b=102;}
+  else if (h < 216)
+    {*r=0; *g=255; *b=255;}
+  else if (h < 252)
+    {*r=0; *g=102; *b=255;}
+  else if (h < 288)
+    {*r=51; *g=0; *b=255;}
+  else if (h < 324)
+    {*r=205; *g=0; *b=255;}
+  else if (h < 360)
+    {*r=255; *g=0; *b=154;}
+  else 
+    {*r=255; *g=255; *b=255;}
+ }
+
+// void MapViewer::HSVtoRGB( float *r, float *g, float *b, float h, float s, float v )
+// {
+//   int i;
+//   float f, p, q, t;
+//   if( s == 0 ) 
+//     {
+//       // achromatic (grey)
+//       *r = *g = *b = v;
+//       return;
+//     }
+//   h /= 60;// sector 0 to 5
+//   i = floor( h );
+//   f = h - i;// factorial part of h
+//   p = v * ( 1 - s );
+//   q = v * ( 1 - s * f );
+//   t = v * ( 1 - s * ( 1 - f ) );
+//   switch( i ) 
+//     {
+//     case 0:
+//       *r = v;
+//       *g = t;
+//       *b = p;
+//       break;
+//     case 1:
+//       *r = q;
+//       *g = v;
+//       *b = p;
+//       break;
+//     case 2:
+//       *r = p;
+//       *g = v;
+//       *b = t;
+//       break;
+//     case 3:
+//       *r = p;
+//       *g = q;
+//       *b = v;
+//       break;
+//     case 4:
+//       *r = t;
+//       *g = p;
+//       *b = v;
+//       break;
+//     default:// case 5:
+//       *r = v;
+//       *g = p;
+//       *b = q;
+//       break;
+//     }
+//}
+
+
+// /**
+//  * Converts an HSV color to an RGB color, according to the algorithm described at http://en.wikipedia.org/wiki/HSL_and_HSV
+//  *
+//  * @param HSV the color to convert.
+//  * @return the RGB representation of the color.
+//  */
+// void MapViewer::HSVtoRGB(float* r, float* g, float* b, float h, float s, float v)
+// {
+//   float Min;
+//   float Chroma;
+//   float Hdash;
+//   float X;
+  
+//   Chroma = s * v;
+//   Hdash = h / 60.0;
+//   X = Chroma * (1.0 - abs(((int)Hdash % 2) - 1.0));
+ 
+//   if(Hdash < 1.0)
+//     {
+//       *r = Chroma;
+//       *g = X;
+//     }
+//   else if(Hdash < 2.0)
+//     {
+//       *r = X;
+//       *g = Chroma;
+//     }
+//   else if(Hdash < 3.0)
+//     {
+//       *g = Chroma;
+//       *b = X;
+//     }
+//   else if(Hdash < 4.0)
+//     {
+//       *g= X;
+//       *b = Chroma;
+//     }
+//   else if(Hdash < 5.0)
+//     {
+//       *r = X;
+//       *b = Chroma;
+//     }
+//   else if(Hdash <= 6.0)
+//     {
+//       *r = Chroma;
+//       *b = X;
+//     }
+ 
+//   Min = v - Chroma;
+ 
+//   *r += Min;
+//   *g += Min;
+//   *b += Min;
+
+// }
 
 

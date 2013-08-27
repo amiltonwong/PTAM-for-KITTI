@@ -156,6 +156,10 @@ void HomographyInit::RefineHomographyWithInliers()
   
   // Calculate robust sigma:
   vector<double> vdd = vdErrorSquared;
+  if (vdErrorSquared.size() <= 0)
+    {
+    cout << "BAD ERROR SQUARED"  << endl;
+    }
   double dSigmaSquared = Tukey::FindSigmaSquared(vdd);
   
   // Add re-weighted measurements to WLS:

@@ -14,8 +14,8 @@ using namespace std;
 using namespace GVars3;
 
 
-System::System()
-  : mGLWindow(mVideoSource.Size(), "PTAM")
+System::System(char* imgset)
+  : mVideoSource(imgset), mGLWindow(mVideoSource.Size(), "PTAM")
 {
 
   GUI.RegisterCommand("exit", GUICommandCallBack, this);
@@ -54,8 +54,8 @@ System::System()
   GUI.ParseLine("Menu.AddMenuToggle Root \"View Map\" DrawMap Root");
   GUI.ParseLine("Menu.AddMenuToggle Root \"Draw AR\" DrawAR Root");
   
-
   mbDone = false;
+
 };
 
 void System::Run()

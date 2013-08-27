@@ -22,7 +22,7 @@ struct VideoSourceData;
 class VideoSource
 {
  public:
-  VideoSource();
+  VideoSource(char* imgset);
   void Init(std::string _imgloc);
   std::string CreateCurrentFileName();
   void GetAndFillFrameBWandRGB(CVD::Image<CVD::byte> &imBW, CVD::Image<CVD::Rgb<CVD::byte> > &imRGB);
