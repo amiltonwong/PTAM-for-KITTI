@@ -102,8 +102,8 @@ void MapMaker::run()
       
       CHECK_RESET;
       // Run global bundle adjustment?
-      //      if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
-      //BundleAdjustAll();
+      // if(mbBundleConverged_Recent && !mbBundleConverged_Full && QueueSize() == 0)
+      // 	BundleAdjustAll();
       
       CHECK_RESET;
       // Very low priorty: re-find measurements marked as outliers
@@ -113,6 +113,10 @@ void MapMaker::run()
 
       CHECK_RESET;
       HandleBadPoints();
+
+      CHECK_RESET;
+      MakeOldKeyFramesFixed();
+
       
       CHECK_RESET;
       // Any new key-frames to be added?
@@ -216,6 +220,22 @@ void MapMaker::HandleBadPoints()
       }
   // Move bad points to the trash list.
   mMap.MoveBadPointsToTrash();
+}
+
+void MapMaker::MakeOldKeyFramesFixed()
+{
+  int farAway = 10;
+  
+  //vector<KeyFrame*> &vkf;
+  //mMap.vpKeyFrames.size();
+  //cout << "----Keyframe size is: " << vkf.size() << endl;
+  //cout << mMap.vpKeyFrames.size() <<endl;
+  int vsize = mMap.vpKeyFrames.size();
+
+  // if (vsize > farAway)
+  //    {
+  //      mMap.vpKeyFrames[vsize - farAway]->bFixed = true;
+  //    }
 }
 
 MapMaker::~MapMaker()
@@ -508,6 +528,7 @@ void MapMaker::AddKeyFrame(KeyFrame &k)
   mvpKeyFrameQueue.push_back(pK);
   if(mbBundleRunning)   // Tell the mapmaker to stop doing low-priority stuff and concentrate on this KF first.
     mbBundleAbortRequested = true;
+
 }
 
 // Mapmaker's code to handle incoming key-frames.
