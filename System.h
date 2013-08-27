@@ -27,7 +27,7 @@ class MapViewer;
 class System
 {
 public:
-  System();
+  System(char* imgset);
   void Run();
   
 private:

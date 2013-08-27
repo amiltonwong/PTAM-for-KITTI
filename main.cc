@@ -9,7 +9,7 @@
 using namespace std;
 using namespace GVars3;
 
-int main()
+int main(int argc, char *argv[])
 {
   cout << "  Welcome to PTAM " << endl;
   cout << "  --------------- " << endl;
@@ -18,13 +18,15 @@ int main()
   cout << endl;
   cout << "  Parsing settings.cfg ...." << endl;
   GUI.LoadFile("settings.cfg");
-  
+  cout << "  Using image set: " << argv[1] << endl;
+
+
   //GUI.StartParserThread(); // Start parsing of the console input
   //atexit(GUI.StopParserThread); 
   
   try
     {
-      System s;
+      System s(argv[1]);
       s.Run();
     }
   catch(CVD::Exceptions::All e)
