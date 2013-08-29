@@ -32,24 +32,10 @@ OBJECTS=	main.o\
 		EyeGame.o\
 		Tracker.o
 
-CALIB_OBJECTS=	GLWindow2.o\
-		GLWindowMenu.o\
-		$(VIDEOSOURCE)\
-		CalibImage.o \
-		CalibCornerPatch.o\
-		ATANCamera.o \
-		CameraCalibrator.o
-
-#All: PTAM CameraCalibrator
-
 All: PTAM
 
 PTAM: $(OBJECTS)
 	$(CC) -o PTAM.exe $(OBJECTS) $(LINKFLAGS)
-
-#CameraCalibrator:$(CALIB_OBJECTS)
-#	$(CC) -o CameraCalibrator.exe $(CALIB_OBJECTS) $(LINKFLAGS)
-
 
 %.o: %.cc
 	$(CC) $< -o $@ -c $(COMPILEFLAGS)
