@@ -36,7 +36,7 @@ protected:
   
   void DrawGrid();
   void DrawMapDots(SE3<> se3CamFromWorld);
-  void DrawCamera(SE3<> se3, bool bSmall=false);
+  void DrawCamera(SE3<> se3, bool bSmall=false, bool bFixed=false);
   void SetupFrustum();
   void SetupModelView(SE3<> se3WorldFromCurrent = SE3<>());
   

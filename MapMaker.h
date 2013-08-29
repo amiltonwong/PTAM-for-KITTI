@@ -97,7 +97,7 @@ protected:
   // General Maintenance/Utility:
   void Reset();
   void HandleBadPoints();
-  void MakeOldKeyFramesFixed();
+  //void MakeOldKeyFramesFixed();
   double DistToNearestKeyFrame(KeyFrame &kCurrent);
   double KeyFrameLinearDist(KeyFrame &k1, KeyFrame &k2);
   KeyFrame* ClosestKeyFrame(KeyFrame &k);
