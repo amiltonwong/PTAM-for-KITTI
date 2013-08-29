@@ -1050,7 +1050,7 @@ void Tracker::MakeOldKeyFramesFixed()
   if (vsize > farAway)
      {
         mMap.vpKeyFrames[vsize - farAway]->bFixed = true;
-	cout << "frame " << vsize << " is now fixed" << endl;
+	//	cout << "frame " << vsize << " is now fixed" << endl;
      }
 }
 

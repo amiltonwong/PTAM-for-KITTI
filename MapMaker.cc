@@ -191,8 +191,8 @@ void MapMaker::HandleBadPoints()
       double D = KeyFrameLinearDist(kNew, kOrig);
       //cout << D << endl;
       // if (D > 0.4)
-      if (D > 4*mdWiggleScale) 
-      	p.bBad = true;
+      //      if (D > 4*mdWiggleScale) 
+      //p.bBad = true;
 
       // Attempt at removing points that are behind initial position
       // if(p.v3WorldPos[2] < 0.0)
