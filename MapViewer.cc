@@ -192,7 +192,12 @@ void MapViewer::DrawMap(SE3<> se3CamFromWorld, bool follow)
   DrawMapDots(se3CamFromWorld);
   DrawCamera(se3CamFromWorld);
   for(size_t i=0; i<mMap.vpKeyFrames.size(); i++)
-    DrawCamera(mMap.vpKeyFrames[i]->se3CfromW, true);
+    {
+      if (mMap.vpKeyFrames[i]->bFixed)
+	DrawCamera(mMap.vpKeyFrames[i]->se3CfromW, true, true);
+      else
+	DrawCamera(mMap.vpKeyFrames[i]->se3CfromW, true, false);
+    }
   glDisable(GL_DEPTH_TEST);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -226,7 +231,7 @@ void MapViewer::SetupModelView(SE3<> se3WorldFromCurrent)
   return;
 };
 
-void MapViewer::DrawCamera(SE3<> se3CfromW, bool bSmall)
+void MapViewer::DrawCamera(SE3<> se3CfromW, bool bSmall, bool bFixed)
 {
   
   SetupModelView(se3CfromW.inverse());
@@ -238,13 +243,22 @@ void MapViewer::DrawCamera(SE3<> se3CfromW, bool bSmall)
     glLineWidth(3);
   
   glBegin(GL_LINES);
-  glColor3f(1,0,0);
+  if (bFixed)
+    glColor3f(0,0,1);
+  else
+    glColor3f(1,0,0);
   glVertex3f(0.0f, 0.0f, 0.0f);
   glVertex3f(1.0f*ScaleFactor, 0.0f, 0.0f);
-  glColor3f(0,1,0);
+  if (bFixed)
+    glColor3f(0,0,1);
+  else
+    glColor3f(0,1,0);
   glVertex3f(0.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 1.0f*ScaleFactor, 0.0f);
-  glColor3f(1,1,1);
+  if (bFixed)
+    glColor3f(0,0,1);
+  else
+    glColor3f(1,1,1);
   glVertex3f(0.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 0.0f, 1.0f*ScaleFactor);
   glEnd();

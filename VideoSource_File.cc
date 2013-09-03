@@ -13,10 +13,14 @@ VideoSource::VideoSource(char* imgset)
 
   //imgloc = _imgloc;
   
-  imgloc = "/home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/";
+  imgloc = "";
+  // /home/ddetone/Projects/Multitarget_Tracking/Datasets/KITTI/training/image_02/
   imgloc.append(imgset);
-  imgloc.append("/");
- 
+  
+
+  if ( imgloc[imgloc.size() -1] != '/')
+    imgloc.append("/");
+
   imgindex = 0;
   
   string path = CreateCurrentFileName();

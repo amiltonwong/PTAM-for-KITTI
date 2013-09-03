@@ -109,6 +109,9 @@ protected:
   int mnFrame;                    // Frames processed since last reset
   int mnLastKeyFrameDropped;      // Counter of last keyframe inserted.
   void AddNewKeyFrame();          // Gives the current frame to the mapmaker to use as a keyframe
+
+  void MakeOldKeyFramesFixed();
+
   
   // Tracking quality control:
   int manMeasAttempted[LEVELS];

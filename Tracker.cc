@@ -1037,6 +1037,21 @@ void Tracker::AddNewKeyFrame()
   mNumKF++;
   mMapMaker.AddKeyFrame(mCurrentKF);
   mnLastKeyFrameDropped = mnFrame;
+  MakeOldKeyFramesFixed();
+}
+
+void Tracker::MakeOldKeyFramesFixed()
+{
+  int farAway = 25;
+  //cout << "----Keyframe size is: " << vkf.size() << endl;
+  //cout << mMap.vpKeyFrames.size() <<endl;
+  int vsize = mMap.vpKeyFrames.size();
+
+  if (vsize > farAway)
+     {
+        mMap.vpKeyFrames[vsize - farAway]->bFixed = true;
+	//	cout << "frame " << vsize << " is now fixed" << endl;
+     }
 }
 
 // Some heuristics to decide if tracking is any good, for this frame.

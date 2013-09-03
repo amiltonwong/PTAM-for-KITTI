@@ -1,9 +1,11 @@
 *.o
 *.exe
 *~
-*#
+*#*
 *.r
 *.pdf
+*.txt
 Build
 Lib
+
 
