@@ -185,16 +185,17 @@ void MapMaker::HandleBadPoints()
 	  p.bBad = true;
 	}
       */
-      
+
+
+      // REMOVE map points observed in KFs greather than four KFs ago      
       KeyFrame &kNew = *(mMap.vpKeyFrames[mMap.vpKeyFrames.size() - 1]); // The new keyframe
       KeyFrame &kOrig = *(p.pPatchSourceKF); // The keyframe that the point was measured in
       double D = KeyFrameLinearDist(kNew, kOrig);
-      //cout << D << endl;
-      // if (D > 0.4)
-      //      if (D > 4*mdWiggleScale) 
-      //p.bBad = true;
+      if (D > 4*mdWiggleScale) 
+	p.bBad = true;
 
-      // Attempt at removing points that are behind initial position
+
+      // Remove points that are behind initial position
       // if(p.v3WorldPos[2] < 0.0)
       //  	{
       // 	  p.bBad = true;
